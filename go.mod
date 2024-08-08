@@ -1,4 +1,4 @@
-module norbloc/nbcmr
+module github.com/kpapap/nbcmr
 
 go 1.22.4
 
