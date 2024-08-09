@@ -11,8 +11,9 @@ import (
 	"go.opentelemetry.io/collector/receiver"
 )
 
+
 var (
-	typeStr = component.MustNewType("nbcmr")
+	typeStr = component.MustNewType("logs")
 )
 
 const (
