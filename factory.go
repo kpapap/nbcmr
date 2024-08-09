@@ -13,7 +13,7 @@ import (
 
 
 var (
-	typeStr = component.MustNewType("logs")
+	typeStr = component.MustNewType("nbcmr")
 )
 
 const (
