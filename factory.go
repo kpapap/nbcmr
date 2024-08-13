@@ -8,16 +8,9 @@ import (
 	"go.opentelemetry.io/collector/receiver"
 )
 
-var (
-	typeStr = component.MustNewType("nbcmr")
-)
-
-// Create factory.go file and define the unique string to identify your connector as a global constant
-const (
-	defaultVal = "1m"
-)
-
-const (ConfigMapName = "nbcmr-cm")
+var (typeStr = component.MustNewType("nbcmr"))
+const (defaultInterval = "1m")
+const (defaultConfigMapName = "nbcmr-cm")
 
 // createLogsReceiver creates a new instance of the nbcmr receiver.
 func createLogsReceiver(ctx context.Context, set receiver.Settings, cfg component.Config, nextConsumer consumer.Logs) (receiver.Logs, error) {
@@ -43,6 +36,7 @@ func NewFactory() receiver.Factory {
 // for the receiver.
 func createDefaultConfig() component.Config {
 	return &Config{
-		interval: defaultVal,
+		interval: defaultInterval,
+		ConfigMapName: defaultConfigMapName,
 	}
 }
