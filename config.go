@@ -10,7 +10,7 @@ type Config struct {
 	// The name of the configMap.
 	ConfigMapName string `mapstructure:"config_map_name"`
 	// The interval of the collector.
-	interval string `mapstructure:"interval"`
+	Interval string `mapstructure:"config_interval"`
 }
 
 // Validate checks if the receiver configuration is valid
@@ -19,7 +19,7 @@ func (cfg *Config) Validate() error {
 		return fmt.Errorf("config cannot be nil")
 	}
 
-	interval, err := time.ParseDuration(cfg.interval)
+	interval, err := time.ParseDuration(cfg.Interval)
 	if err != nil {
 		return fmt.Errorf("failed to parse interval: %w", err)
 	}

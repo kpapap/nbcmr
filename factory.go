@@ -36,7 +36,7 @@ func NewFactory() receiver.Factory {
 // for the receiver.
 func createDefaultConfig() component.Config {
 	return &Config{
-		interval: defaultInterval,
+		Interval: defaultInterval,
 		ConfigMapName: defaultConfigMapName,
 	}
 }
