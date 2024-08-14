@@ -2,7 +2,6 @@ package nbcmr
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -119,13 +118,8 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 			log.Println("Starting loop")
 			for range ticker.C {
 			log.Println("Checking http connection...")
-			conn, err := net.DialTimeout("tcp", "www.google.com:80", 3*time.Second)
-			if err != nil {
-				fmt.Println("port closed")
-			} else {
-				fmt.Println("port open")
-			}
-			conn.Close()
+			checking, err := net.DialTimeout("tcp", "www.google.com:80", 3*time.Second)
+			log.Println(checking, err)
 			log.Println("Listing selected ConfigMaps:")
 			for name, namespace := range configMapMap {
 				log.Printf("Getting ConfigMap %s in namespace %s", name, namespace)
