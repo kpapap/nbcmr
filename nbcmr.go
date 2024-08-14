@@ -2,7 +2,9 @@ package nbcmr
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net"
 	"os"
 	"time"
 
@@ -98,6 +100,20 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 		ticker := time.NewTicker(repeatTime)
 		defer ticker.Stop()
 		log.Println("Ticker created")
+
+		// Create an http ticket for http checks
+		log.Println("Creating HTTP ticker")
+		httprepeatTimeStr := "5m"
+		if httprepeatTimeStr == "" {
+			log.Fatal("HTTP ticker is not set")
+		}
+		httprepeatTime, err := time.ParseDuration(httprepeatTimeStr)
+		if err != nil {
+			log.Fatalf("Error parsing http ticker environment variable: %s", err.Error())
+		}
+		httpticker := time.NewTicker(httprepeatTime)
+		defer httpticker.Stop()
+		log.Println("HTTP Ticker created")
 	
 		// Run the code in a loop with a ticker
 		log.Println("Starting loop")
@@ -114,6 +130,16 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 					log.Printf("Namespace: %s, Name: %s, Data: %v", configmap.Namespace, configmap.Name, configmap.Data)
 				}
 			}
+		}
+		for range httpticker.C {
+			log.Println("Checking http connection...")
+			conn, err := net.DialTimeout("tcp", "www.google.com:80", 3*time.Second)
+			if err != nil {
+				fmt.Println("port closed")
+				return err
+			}
+			defer conn.Close()
+			fmt.Println("port open")
 		}
 		return nil
 	}
