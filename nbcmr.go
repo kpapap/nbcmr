@@ -8,7 +8,6 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
-	"go.opentelemetry.io/collector/pdata/plog"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,8 +35,8 @@ func (c *nbcmrReceiver) Capabilities() consumer.Capabilities {
 	return consumer.Capabilities{MutatesData: false}
 }
 
-func (c *nbcmrReceiver) ConsumeLogs(ctx context.Context, ld plog.Logs) error {
-	return c.nextConsumer.ConsumeLogs(ctx, ld)
+func (c *nbcmrReceiver) ConsumeLogs(ctx context.Context, ld consumer.Logs) error {
+	return nil
 }
 
 func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
