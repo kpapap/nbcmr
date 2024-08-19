@@ -4,11 +4,12 @@ import (
 	"context"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
-	"go.uber.org/zap"
+	"go.opentelemetry.io/collector/receiver"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -26,17 +27,19 @@ type ConfigMapMapping struct {
 }
 
 type nbcmrReceiver struct {
-	config *Config
-	logger *zap.Logger
-	nextConsumer consumer.Logs
+	cfg      			*Config
+	nextConsumer	consumer.Logs
+	settings 			receiver.Settings
+	shutdownWG  	sync.WaitGroup
 }
 
-func (c *nbcmrReceiver) Capabilities() consumer.Capabilities {
-	return consumer.Capabilities{MutatesData: false}
-}
-
-func (c *nbcmrReceiver) ConsumeLogs(ctx context.Context, ld consumer.Logs) error {
-	return nil
+func newNbcmrReceiver(cfg *Config, nextConsumer consumer.Logs, settings receiver.Settings) (*nbcmrReceiver, error) {
+	r := &nbcmrReceiver{
+		cfg:        	cfg,
+		nextConsumer:	nextConsumer,
+		settings:			settings,
+	}
+	return r, nil
 }
 
 func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
@@ -120,10 +123,11 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 
 // Shutdown shuts down the receiver.
 func (r *nbcmrReceiver) Shutdown(ctx context.Context) error {
-	// Shutdown the receiver
+	var err error
+	r.shutdownWG.Wait()
 	// Log a message indicating that the receiver is shutting down.
 	log.Println("Shutting down receiver")
-	// Return nil to indicate that the receiver shut down successfully.
-	return nil
+	// Return err to indicate that the receiver shut down successfully.
+	return err
 }
 
