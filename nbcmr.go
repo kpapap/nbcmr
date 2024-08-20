@@ -47,7 +47,7 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 	r.settings.Logger.Info("Loading Kubernetes cluster configuration")
 	clusterconfig, err := clientcmd.BuildConfigFromFlags("", "")
 	if err != nil {
-		r.settings.Logger.Error("Error building kubeconfig: %s")
+		r.settings.Logger.Sugar().Errorf("Error building kubeconfig: %s", clusterconfig)
 	}
 	r.settings.Logger.Info("Kubernetes cluster configuration loaded")
 
@@ -55,7 +55,7 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 	r.settings.Logger.Info("Creating Kubernetes client")
 	clientset, err := kubernetes.NewForConfig(clusterconfig)
 	if err != nil {
-		r.settings.Logger.Error("Error creating Kubernetes client: %s")
+		r.settings.Logger.Sugar().Errorf("Error creating Kubernetes client: %s", clientset)
 	}
 	r.settings.Logger.Info("Kubernetes client created")
 
@@ -72,7 +72,7 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 	var configYAML []ConfigMapMapping
 	err = yaml.Unmarshal([]byte(yamlData), &configYAML)
 	if err != nil {
-		r.settings.Logger.Error("Error decoding YAML data: %s")
+		r.settings.Logger.Sugar().Errorf("Error decoding YAML data: %s", err)
 	}
 	r.settings.Logger.Info("YAML data decoded")
 
@@ -95,7 +95,7 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 	}
 	repeatTime, err := time.ParseDuration(repeatTimeStr)
 	if err != nil {
-		r.settings.Logger.Error("Error parsing INTERVAL environment variable: %s")
+		r.settings.Logger.Sugar().Errorf("Error parsing INTERVAL environment variable: %s", repeatTimeStr)
 	}
 	ticker := time.NewTicker(repeatTime)
 	defer ticker.Stop()
@@ -110,14 +110,14 @@ func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 		case <-ticker.C:
 			r.settings.Logger.Info("Listing selected ConfigMaps:")
 			for name, namespace := range configMapMap {
-				r.settings.Logger.Info("Getting ConfigMap %s in namespace %s")
+				r.settings.Logger.Sugar().Infof("Getting ConfigMap %s in namespace %s", name, namespace)
 				configmap, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 				if err != nil {
-					r.settings.Logger.Error("Error getting ConfigMap %s in namespace %s: %s")
+					r.settings.Logger.Sugar().Errorf("Error getting ConfigMap %s in namespace %s: %s", name, namespace, err)
 					continue
 				}
 				if configmap != nil {
-					r.settings.Logger.Info("Namespace: %s, Name: %s, Data: %v")
+					r.settings.Logger.Sugar().Infof("Namespace: %s, Name: %s, Data: %v", configmap.Namespace, configmap.Name, configmap.Data)
 				}
 			}
 		}
