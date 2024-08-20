@@ -23,7 +23,7 @@ func NewFactory() receiver.Factory {
 }
 
 // createLogsReceiver creates a new instance of the nbcmr receiver.
-func createLogsReceiver(_ context.Context, settings receiver.Settings, cfg component.Config, consumer consumer.Logs) (receiver.Logs, error) {
+func createLogsReceiver(ctx context.Context, settings receiver.Settings, cfg component.Config, consumer consumer.Logs) (receiver.Logs, error) {
 	// Create the new receiver
 	rCfg := cfg.(*Config)
 	return newNbcmrReceiver(rCfg, consumer, settings)
