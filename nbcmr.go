@@ -2,7 +2,6 @@ package nbcmr
 
 import (
 	"context"
-	"log"
 	"os"
 	"sync"
 	"time"
@@ -45,80 +44,80 @@ func newNbcmrReceiver(cfg *Config, nextConsumer consumer.Logs, settings receiver
 func (r *nbcmrReceiver) Start(ctx context.Context, host component.Host) error {
 	// Start the receiver
 	// Load Kubernetes cluster configuration
-	log.Println("Loading Kubernetes cluster configuration")
+	r.settings.Logger.Info("Loading Kubernetes cluster configuration")
 	clusterconfig, err := clientcmd.BuildConfigFromFlags("", "")
 	if err != nil {
-		log.Fatalf("Error building kubeconfig: %s", err.Error())
+		r.settings.Logger.Error("Error building kubeconfig: %s")
 	}
-	log.Println("Kubernetes cluster configuration loaded")
+	r.settings.Logger.Info("Kubernetes cluster configuration loaded")
 
 	// Create Kubernetes client
-	log.Println("Creating Kubernetes client")
+	r.settings.Logger.Info("Creating Kubernetes client")
 	clientset, err := kubernetes.NewForConfig(clusterconfig)
 	if err != nil {
-		log.Fatalf("Error creating Kubernetes client: %s", err.Error())
+		r.settings.Logger.Error("Error creating Kubernetes client: %s")
 	}
-	log.Println("Kubernetes client created")
+	r.settings.Logger.Info("Kubernetes client created")
 
 	// Read the YAML data from the environment variable
-	log.Println("Reading YAML data from environment variable")
+	r.settings.Logger.Info("Reading YAML data from environment variable")
 	yamlData := os.Getenv("CONFIGMAP_LIST")
 	if yamlData == "" {
-		log.Fatal("CONFIGMAP_LIST environment variable is not set")
+		r.settings.Logger.Error("CONFIGMAP_LIST environment variable is not set")
 	}
-	log.Println("YAML data read from environment variable")
+	r.settings.Logger.Info("YAML data read from environment variable")
 
 	// Decode the YAML data into a struct
-	log.Println("Decoding YAML data")
+	r.settings.Logger.Info("Decoding YAML data")
 	var configYAML []ConfigMapMapping
 	err = yaml.Unmarshal([]byte(yamlData), &configYAML)
 	if err != nil {
-		log.Fatalf("Error decoding YAML data: %s", err.Error())
+		r.settings.Logger.Error("Error decoding YAML data: %s")
 	}
-	log.Println("YAML data decoded")
+	r.settings.Logger.Info("YAML data decoded")
 
 	// Create a map of ConfigMap names and their corresponding namespaces
-	log.Println("Creating map of ConfigMap names and namespaces")
+	r.settings.Logger.Info("Creating map of ConfigMap names and namespaces")
 	configMapMap := make(map[string]string)
 
 	// Populate the configMapMap from the YAML data
 	for _, mapping := range configYAML {
 		configMapMap[mapping.Name] = mapping.Namespace
 	}
-	log.Println("Map of ConfigMap names and namespaces created")
+	r.settings.Logger.Info("Map of ConfigMap names and namespaces created")
 
 	// Create a ticker to repeat the code
-	log.Println("Creating ticker")
+	r.settings.Logger.Info("Creating ticker")
 	// Get the repeat time from environment variable
 	repeatTimeStr := os.Getenv("INTERVAL")
 	if repeatTimeStr == "" {
-		log.Fatal("INTERVAL environment variable is not set")
+		r.settings.Logger.Error("INTERVAL environment variable is not set")
 	}
 	repeatTime, err := time.ParseDuration(repeatTimeStr)
 	if err != nil {
-		log.Fatalf("Error parsing INTERVAL environment variable: %s", err.Error())
+		r.settings.Logger.Error("Error parsing INTERVAL environment variable: %s")
 	}
 	ticker := time.NewTicker(repeatTime)
 	defer ticker.Stop()
-	log.Println("Ticker created")
+	r.settings.Logger.Info("Ticker created")
 
 	// Run the code in a loop with a ticker
-	log.Println("Starting loop")
+	r.settings.Logger.Info("Starting loop")
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			log.Println("Listing selected ConfigMaps:")
+			r.settings.Logger.Info("Listing selected ConfigMaps:")
 			for name, namespace := range configMapMap {
-				log.Printf("Getting ConfigMap %s in namespace %s", name, namespace)
+				r.settings.Logger.Info("Getting ConfigMap %s in namespace %s")
 				configmap, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 				if err != nil {
-					log.Printf("Error getting ConfigMap %s in namespace %s: %s", name, namespace, err.Error())
+					r.settings.Logger.Error("Error getting ConfigMap %s in namespace %s: %s")
 					continue
 				}
 				if configmap != nil {
-					log.Printf("Namespace: %s, Name: %s, Data: %v", configmap.Namespace, configmap.Name, configmap.Data)
+					r.settings.Logger.Info("Namespace: %s, Name: %s, Data: %v")
 				}
 			}
 		}
@@ -130,7 +129,7 @@ func (r *nbcmrReceiver) Shutdown(ctx context.Context) error {
 	var err error
 	r.shutdownWG.Wait()
 	// Log a message indicating that the receiver is shutting down.
-	log.Println("Shutting down receiver")
+	r.settings.Logger.Info("Shutting down receiver")
 	// Return err to indicate that the receiver shut down successfully.
 	return err
 }
